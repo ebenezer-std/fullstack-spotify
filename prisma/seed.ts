@@ -6,22 +6,35 @@ const prisma = new PrismaClient();
 
 const run = async () => {
   await Promise.all(
-    artistsData.map((item) => {
+    artistsData.map(async (artist) => {
       return prisma.artist.upsert({
-        where: { name: item.name },
+        where: { name: artist.name },
         update: {},
         create: {
-          name: item.name,
-          songs: {
-            create: item.songs.map((song) => ({
+          name: artist.name,
+          Songs: {
+            create: artist.songs.map((song) => ({
               name: song.name,
               duration: song.duration,
+              url: song.url,
             })),
           },
         },
       });
     })
   );
+
+  const salt = bcrypt.genSaltSync();
+  const user = await prisma.user.upsert({
+    where: { email: "eben@test.com" },
+    update: {},
+    create: {
+      firstName: "Ebenezer",
+      lastName: "Abbey",
+      email: "eben@test.com",
+      password: bcrypt.hashSync("password", salt),
+    },
+  });
 };
 
 run()
